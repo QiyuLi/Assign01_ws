@@ -36,6 +36,8 @@
 
 #include <cas.h>
 
+#include <ring_buffer.h>
+
 #define MAX_DATA_SZ 1024
 #define MAX_CONCURRENCY 4
 
@@ -67,14 +69,6 @@ server_single_request(int accept_fd)
 
 	return;
 }
-
-
-/*
- * The server need a mutex to safely write the thrads_num
- * and threads_num will tell current threads how many threads
- * is current working.
- */
-pthread_mutex_t *mutex;
 
 /*
  * Creates a pthread worker per request
@@ -159,6 +153,36 @@ server_thread_per_req(int accept_fd)
 	return;
 }
 
+/*
+ * The threads need a mutex.
+ */
+pthread_mutex_t mutex;
+
+pthread_cond_t master_cond;
+
+ring_buffer_t ring_buffer;
+
+/*
+ * Creates a pthread worker, locked based on a condition variable
+ * that checks the file descriptor queue.
+ */
+void *server_thread_pool_bounded_worker()
+{
+  while (1) {
+	 	pthread_mutex_lock(&mutex);
+	  
+	  while (int ring_buffer_empty(&ring_buffer) == 0) {
+	  	pthread_cond_wait(&master_cond, &mutex);
+	  }
+	  int file_descriptor;
+	  pop(&ring_buffer, &file_descriptor);
+	  client_process(file_descriptor);
+
+	  pthread_mutex_unlock(&mutex);
+  }
+	pthread_exit(0);
+}
+
 /* 
  * The following implementations use a thread pool.  This collection
  * of threads is of maximum size MAX_CONCURRENCY, and is created by
@@ -172,7 +196,39 @@ server_thread_per_req(int accept_fd)
 void
 server_thread_pool_bounded(int accept_fd)
 {
-	return;
+	buffer_init(&ring_buffer, MAX_DATA_SZ, 64);
+	pthread_t threads[MAX_CONCURRENCY];
+	
+	pthread_mutex_init(&mutex, NULL);
+	pthread_cond_init(&master_cond, NULL);
+
+	for (int i = 0; i < MAX_CONCURRENCY; ++i)
+	{
+		pthread_create(&threads[i], NULL, server_thread_pool_bounded_worker, NULL);
+	}
+
+	// Starts the main request loop
+	while (1) {
+		pthread_mutex_lock(&mutex);
+
+		// Notifies the main thread a worker has finished.
+		//while (buffer_size(&ring_buffer) != 0) {
+		//	pthread_cond_wait(&worker_condition, &mutex);
+		//}
+		if(ring_buffer_full(&ring_buffer) == 0)
+		{
+			continue;
+		}
+
+		// Gets the file descriptor and pushes it into the queue
+		int fd = server_accept(accept_fd);
+		push(&fd, &ring_buffer);
+
+		// Unlockes the mutex and signals the pthread it can go to town.
+		pthread_mutex_unlock(&mutex);
+		pthread_cond_signal(&master_cond);
+	}
+	pthread_exit(0);
 }
 
 
