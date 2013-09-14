@@ -110,44 +110,38 @@ server_thread_per_req(int accept_fd)
     void *ret;
 
     pthread_t thread[MAX_CONCURRENCY];
-    int thread_used[MAX_CONCURRENCY] = {0}; /* Store thread ID, 0 if not used */
 
     /* Start main loop */
     while(1) {
         printf("Loop Loop Loop Loop Loop Loop Loop Loop Loop\n");
-        int threads_num = 0;
-        while(threads_num < MAX_CONCURRENCY) {
-            threads_num++;
+        
             //printf("threads_num: %d\n", threads_num);
             /*
              * The server thread will always want to doing the accept.
              * The main thread will hand off the new fd to the new
              * threads.
              */
-            fd = server_accept(accept_fd);
+            //fd = server_accept(accept_fd);
             //printf("accept\n");
             for(i = 0; i < MAX_CONCURRENCY; i++) {
-                if(thread_used[i] == 0) {
-                    thread_used[i] = 1;
-                    pthread_create(&thread[i], NULL, &worker_per_request, (void *) fd);
-                    printf("create thread %ul\n", thread[i]);
-                    break;
-                }
+               fd = server_accept(accept_fd);
+               pthread_create(&thread[i], NULL, &worker_per_request, (void *) fd);
+               printf("create thread %ul\n", thread[i]);
+
             }
-        }
+       
 
         printf("Clean Up\n");
         /* Join terminated thread and Clean up */
         for(i = 0; i < MAX_CONCURRENCY; i++) {
-            if(thread_used[i] != 0) {
-                thread_used[i] = 0;
+     
                 printf("Begin to Join THread %lu\n", thread[i]);
                 pthread_join(thread[i], NULL);
                 //pthread_detach(&thread[i]);
                 //printf("Join Thread %lu\n", thread[i]);
-                threads_num--;
-                printf("Current thread num: %d\n", threads_num);
-            }
+
+
+          
         }
     }
 
