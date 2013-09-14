@@ -44,7 +44,7 @@ int ring_buffer_is_full(ring_buffer_t *ring_buffer)
 
 void ring_buffer_push(void *data, ring_buffer_t *ring_buffer)
 {
-    if(ring_buffer_full(ring_buffer) == 0) {
+    if(ring_buffer_is_full(ring_buffer) == 0) {
         return;
     }
 
@@ -60,7 +60,7 @@ void ring_buffer_push(void *data, ring_buffer_t *ring_buffer)
 
 void ring_buffer_pop(ring_buffer_t *ring_buffer, void *data)
 {
-    if (ring_buffer_empty(ring_buffer) == 0) {
+    if (ring_buffer_is_empty(ring_buffer) == 0) {
         return;
     }
 
