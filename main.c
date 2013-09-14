@@ -232,6 +232,7 @@ server_thread_pool_bounded(int accept_fd)
 		if(ring_buffer_full(&ring_buffer) == 0)
 		{
 			printf("master: ring buffer full\n");
+			pthread_mutex_unlock(&mutex);
 			continue;
 		}
 
