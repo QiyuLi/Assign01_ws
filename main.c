@@ -170,8 +170,11 @@ server_thread_per_req(int accept_fd)
  */
 void *server_thread_pool_bounded_worker()
 {
-  while (1) {
+	printf("Worker:%ul Start\n", pthread_self());
+	while (1) {
+		printf("Worker:%ul Waiting mutex\n", pthread_self());
 	 	pthread_mutex_lock(&mutex);
+		printf("Worker:%ul Get mutex\n", pthread_self());
 	  
 	  while (ring_buffer_empty(&ring_buffer) == 0) {
 	  	pthread_cond_wait(&master_cond, &mutex);
@@ -181,6 +184,7 @@ void *server_thread_pool_bounded_worker()
 	  client_process(file_descriptor);
 
 	  pthread_mutex_unlock(&mutex);
+	  printf("Worker:%ul Release mutex\n", pthread_self());
   }
 	pthread_exit(0);
 }
@@ -211,9 +215,12 @@ server_thread_pool_bounded(int accept_fd)
 		pthread_create(&threads[i], NULL, server_thread_pool_bounded_worker, NULL);
 	}
 
+	printf("Start main request loop\n");
 	// Starts the main request loop
 	while (1) {
+		printf("master waiting mutex\n");
 		pthread_mutex_lock(&mutex);
+		printf("master get mutex\n");
 
 		// Notifies the main thread a worker has finished.
 		//while (buffer_size(&ring_buffer) != 0) {
@@ -230,6 +237,7 @@ server_thread_pool_bounded(int accept_fd)
 
 		// Unlockes the mutex and signals the pthread it can go to town.
 		pthread_mutex_unlock(&mutex);
+		printf("master release mutex\n");
 		pthread_cond_signal(&master_cond);
 	}
 	pthread_exit(0);
