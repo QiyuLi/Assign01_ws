@@ -115,7 +115,7 @@ main(int argc, char *argv[])
 		       "0: serve only a single request\n"
 		       "1: serve each request with a new thread\n"
 		       "2: use a thread pool and a _bounded_ buffer with "
-		       "mutexes + condition variables\n"
+		       "mutexes + condition variables\n",
 		       argv[0]);
 		return -1;
 	}
