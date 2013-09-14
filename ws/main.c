@@ -68,6 +68,29 @@ server_single_request(int accept_fd)
 	return;
 }
 
+
+/*
+ * The server need a mutex to safely write the thrads_num
+ * and threads_num will tell current threads how many threads
+ * is current working.
+ */
+pthread_mutex_t *mutex;
+
+/*
+ * Creates a pthread worker per request
+ */
+void *worker_per_request(void *fd)
+{
+	//pthread_mutex_lock(&mutex);
+	//threads_num++;
+	//pthread_mutex_unlock(&mutex);
+	printf("Worker%lu start\n", pthread_self());
+	client_process((int) fd);
+	
+	printf("Worker%lu Stop!\n", pthread_self());
+	pthread_exit(NULL);
+}
+
 /* 
  * The following implementation creates a new thread per client
  * request using the pthread API, and that thread is removed/killed
@@ -76,6 +99,63 @@ server_single_request(int accept_fd)
 void
 server_thread_per_req(int accept_fd)
 {
+	int fd;
+	int i,j = 0;
+	void *ret;
+
+	pthread_t thread[MAX_CONCURRENCY];
+	int thread_used[MAX_CONCURRENCY] = {0};
+
+	if(pthread_mutex_init(&mutex, NULL) != 0)
+	{
+		return -1;	
+	}
+
+	/* A loop to make sure */
+	while(1)
+	{
+		printf("Loop Loop Loop Loop Loop Loop Loop Loop Loop\n");
+		int threads_num = 0;
+		while(threads_num < MAX_CONCURRENCY)
+		{
+			threads_num++;
+			printf("threads_num: %d\n", threads_num);
+		/*                                                                                                                                                                                      
+		 * The server thread will always want to doing the accept.
+		 * The main thread will hand off the new fd to the new
+		 * threads.
+		 */
+			fd = server_accept(accept_fd);
+			printf("accept\n");
+			for(i=0;i<MAX_CONCURRENCY;i++)
+			{
+				if(thread_used[i] == 0)
+				{
+					thread_used[i] = 1;
+					pthread_create(&thread[i],NULL, &worker_per_request, (void *) fd);
+					printf("create thread\n");
+					break;
+				}
+			}
+		}
+
+		printf("Clean Up\n");
+		/* Clean up */
+		for(i=0; i<MAX_CONCURRENCY; i++)
+		{
+			if(thread_used[i] != 0)
+			{
+				thread_used[i] = 0;
+				printf("Begin to Join THread %lu\n", thread[i]);
+				pthread_join(thread[i], NULL);
+				//pthread_detach(&thread[i]);
+				printf("Join Thread %lu\n", thread[i]);
+				threads_num--;
+				printf("Current thread num: %d\n", threads_num);
+			}
+		}
+	}
+
 	return;
 }
 
