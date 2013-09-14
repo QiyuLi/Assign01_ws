@@ -173,7 +173,7 @@ void *server_thread_pool_bounded_worker()
         pthread_mutex_lock(&mutex);
         //printf("Worker:%ul Get mutex\n", pthread_self());
 
-        while (ring_buffer_empty(&ring_buffer) == 0) {
+        while (ring_buffer_is_empty(&ring_buffer) == 0) {
             //printf("Worker:%ul wait signal\n", pthread_self());
             pthread_cond_wait(&master_cond, &mutex);
             //printf("Worker:%ul resume after signal\n", pthread_self());
@@ -237,7 +237,7 @@ server_thread_pool_bounded(int accept_fd)
         //while (buffer_size(&ring_buffer) != 0) {
         //	pthread_cond_wait(&worker_condition, &mutex);
         //}
-        while(ring_buffer_full(&ring_buffer) == 0) {
+        while(ring_buffer_is_full(&ring_buffer) == 0) {
             //printf("master: ring buffer full\n");
             pthread_cond_wait(&worker_cond, &mutex);
         }

@@ -27,14 +27,14 @@ void ring_buffer_init(ring_buffer_t *ring_buffer, size_t element_capacity, size_
     return;
 }
 
-int ring_buffer_empty(ring_buffer_t *ring_buffer)
+int ring_buffer_is_empty(ring_buffer_t *ring_buffer)
 {
     if(ring_buffer->element_count == 0)
         return 0;
     return -1;
 }
 
-int ring_buffer_full(ring_buffer_t *ring_buffer)
+int ring_buffer_is_full(ring_buffer_t *ring_buffer)
 {
     printf("Buffer queue number: %d\n", ring_buffer->element_count);
     if(ring_buffer->element_count == ring_buffer->element_capacity)
