@@ -47,6 +47,7 @@
 pthread_mutex_t mutex;
 
 pthread_cond_t master_cond;
+pthread_cond_t worker_cond;
 
 ring_buffer_t ring_buffer;
 
@@ -170,6 +171,7 @@ server_thread_per_req(int accept_fd)
  */
 void *server_thread_pool_bounded_worker()
 {
+	sleep(2);
 	printf("Worker:%ul Start\n", pthread_self());
 	while (1) {
 		printf("Worker:%ul Waiting mutex\n", pthread_self());
@@ -188,6 +190,7 @@ void *server_thread_pool_bounded_worker()
 
 	  pthread_mutex_unlock(&mutex);
 	  printf("Worker:%ul Release mutex\n", pthread_self());
+	  pthread_cond_signal(&worker_cond); 
   }
 	pthread_exit(0);
 }
@@ -212,6 +215,7 @@ server_thread_pool_bounded(int accept_fd)
 	
 	pthread_mutex_init(&mutex, NULL);
 	pthread_cond_init(&master_cond, NULL);
+	pthread_cond_init(&worker_cond, NULL); 
 
 	for (i = 0; i < MAX_CONCURRENCY; ++i)
 	{
@@ -221,6 +225,11 @@ server_thread_pool_bounded(int accept_fd)
 	printf("Start main request loop\n");
 	// Starts the main request loop
 	while (1) {
+		printf("master before accept fd\n");
+                int fd = server_accept(accept_fd);
+                printf("master finish accept fd\n");
+
+
 		printf("master waiting mutex\n");
 		pthread_mutex_lock(&mutex);
 		printf("master get mutex\n");
@@ -229,17 +238,16 @@ server_thread_pool_bounded(int accept_fd)
 		//while (buffer_size(&ring_buffer) != 0) {
 		//	pthread_cond_wait(&worker_condition, &mutex);
 		//}
-		if(ring_buffer_full(&ring_buffer) == 0)
+		while(ring_buffer_full(&ring_buffer) == 0)
 		{
 			printf("master: ring buffer full\n");
-			pthread_mutex_unlock(&mutex);
-			continue;
+			pthread_cond_wait(&worker_cond, &mutex);
 		}
 
 		// Gets the file descriptor and pushes it into the queue
-		printf("master before accept fd\n");
-		int fd = server_accept(accept_fd);
-		printf("master finish accept fd\n");
+	//	printf("master before accept fd\n");
+	//	int fd = server_accept(accept_fd);
+	//	printf("master finish accept fd\n");
 		ring_buffer_push(&fd, &ring_buffer);
 
 		// Unlockes the mutex and signals the pthread it can go to town.
