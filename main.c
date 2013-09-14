@@ -182,6 +182,7 @@ void *server_thread_pool_bounded_worker()
 	  int file_descriptor;
 	  ring_buffer_pop(&ring_buffer, &file_descriptor);
 	  client_process(file_descriptor);
+	  printf("Worker:%ul Finish Process\n", pthread_self());
 
 	  pthread_mutex_unlock(&mutex);
 	  printf("Worker:%ul Release mutex\n", pthread_self());
