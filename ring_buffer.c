@@ -33,7 +33,7 @@ int ring_buffer_full(ring_buffer_t *ring_buffer)
 }
 
 // Pushes value onto the queue
-void push(int *file_descriptor, ring_buffer_t *ring_buffer)
+void ring_buffer_push(int *file_descriptor, ring_buffer_t *ring_buffer)
 {
   memcpy(ring_buffer->head, file_descriptor, ring_buffer->element_size);
   ring_buffer->head = (char *)ring_buffer->head + ring_buffer->element_size;
@@ -45,7 +45,7 @@ void push(int *file_descriptor, ring_buffer_t *ring_buffer)
 }
 
 
-void pop(ring_buffer_t *ring_buffer, void *item)
+void ring_buffer_pop(ring_buffer_t *ring_buffer, void *item)
 {
   if (ring_buffer->element_count == 0) {
     return;
