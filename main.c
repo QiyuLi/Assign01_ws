@@ -171,7 +171,6 @@ server_thread_per_req(int accept_fd)
  */
 void *server_thread_pool_bounded_worker()
 {
-	sleep(2);
 	printf("Worker:%ul Start\n", pthread_self());
 	while (1) {
 		printf("Worker:%ul Waiting mutex\n", pthread_self());
