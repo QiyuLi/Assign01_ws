@@ -177,13 +177,13 @@ void *server_thread_pool_bounded_worker()
         }
         int fd;
         ring_buffer_pop(&ring_buffer, &fd);
-		
-		
+
+
         pthread_mutex_unlock(&mutex);
         printf("Worker:%ul Release mutex\n", pthread_self());
         pthread_cond_signal(&worker_cond);
 
-client_process(fd);
+        client_process(fd);
         printf("Worker:%ul Finish Process\n", pthread_self());
 
     }
@@ -205,7 +205,7 @@ server_thread_pool_bounded(int accept_fd)
 {
     int i = 0;
 
-    ring_buffer_init(&ring_buffer, MAX_DATA_SZ, sizeof(int));
+    ring_buffer_init(&ring_buffer, sizeof(int), MAX_DATA_SZ);
     pthread_t threads[MAX_CONCURRENCY];
 
 
@@ -227,7 +227,7 @@ server_thread_pool_bounded(int accept_fd)
     //printf("Start main request loop\n");
     /* Starts main loop */
     while (1) {
-	int fd = server_accept(accept_fd);
+        int fd = server_accept(accept_fd);
         printf("master waiting mutex\n");
         pthread_mutex_lock(&mutex);
         printf("master get mutex\n");
@@ -246,7 +246,7 @@ server_thread_pool_bounded(int accept_fd)
         //	printf("master before accept fd\n");
         //	int fd = server_accept(accept_fd);
         //	printf("master finish accept fd\n");
-        
+
         ring_buffer_push(&fd, &ring_buffer);
         printf("master push fd\n");
 

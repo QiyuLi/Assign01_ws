@@ -25,7 +25,7 @@ typedef struct ring_buffer_t {
 /*
  * Initial ring buffer, with defined element capacity and element size
  */
-void ring_buffer_init(ring_buffer_t *ring_buffer, size_t element_capacity, size_t element_size);
+void ring_buffer_init(ring_buffer_t *ring_buffer, size_t element_size, size_t element_capacity);
 
 /*
  * Check if the ring buffer is empty,

@@ -14,7 +14,7 @@
 /*
  * Initialize the ring buffer
  */
-void ring_buffer_init(ring_buffer_t *ring_buffer, size_t element_capacity, size_t element_size)
+void ring_buffer_init(ring_buffer_t *ring_buffer, size_t element_size, size_t element_capacity)
 {
     /* Create a continues memory space */
     ring_buffer->begin = malloc( (element_capacity + 1) * element_size);
@@ -36,7 +36,7 @@ int ring_buffer_is_empty(ring_buffer_t *ring_buffer)
 
 int ring_buffer_is_full(ring_buffer_t *ring_buffer)
 {
-    	printf("Buffer ring status: %d / %d\n", ring_buffer->element_count, ring_buffer->element_capacity);
+    //printf("Buffer ring status: %d / %d\n", ring_buffer->element_count, ring_buffer->element_capacity);
     if(ring_buffer->element_count == ring_buffer->element_capacity)
         return 0;
     return -1;
