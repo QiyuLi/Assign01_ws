@@ -180,12 +180,13 @@ void *server_thread_pool_bounded_worker()
         }
         int fd;
         ring_buffer_pop(&ring_buffer, &fd);
-        client_process(fd);
-        printf("Worker:%ul Finish Process\n", pthread_self());
 
         pthread_mutex_unlock(&mutex);
         //printf("Worker:%ul Release mutex\n", pthread_self());
         pthread_cond_signal(&worker_cond);
+        
+        client_process(fd);
+        printf("Worker:%ul Finish Process\n", pthread_self());
     }
     pthread_exit(0);
 }
