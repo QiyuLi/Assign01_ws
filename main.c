@@ -177,7 +177,7 @@ void *server_thread_pool_bounded_worker()
 	  	pthread_cond_wait(&master_cond, &mutex);
 	  }
 	  int file_descriptor;
-	  pop(&ring_buffer, &file_descriptor);
+	  ring_buffer_pop(&ring_buffer, &file_descriptor);
 	  client_process(file_descriptor);
 
 	  pthread_mutex_unlock(&mutex);
@@ -226,7 +226,7 @@ server_thread_pool_bounded(int accept_fd)
 
 		// Gets the file descriptor and pushes it into the queue
 		int fd = server_accept(accept_fd);
-		push(&fd, &ring_buffer);
+		ring_buffer_push(&fd, &ring_buffer);
 
 		// Unlockes the mutex and signals the pthread it can go to town.
 		pthread_mutex_unlock(&mutex);
