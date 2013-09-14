@@ -178,6 +178,7 @@ void *server_thread_pool_bounded_worker()
 	  
 	  while (ring_buffer_empty(&ring_buffer) == 0) {
 	  	pthread_cond_wait(&master_cond, &mutex);
+		printf("Worker:%ul wait signal\n", pthread_self());
 	  }
 	  int file_descriptor;
 	  ring_buffer_pop(&ring_buffer, &file_descriptor);
