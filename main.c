@@ -227,10 +227,6 @@ server_thread_pool_bounded(int accept_fd)
     //printf("Start main request loop\n");
     /* Starts main loop */
     while (1) {
-        //printf("master before accept fd\n");
-        int fd = server_accept(accept_fd);
-        //printf("master finish accept fd\n");
-
 
         //printf("master waiting mutex\n");
         pthread_mutex_lock(&mutex);
@@ -249,6 +245,7 @@ server_thread_pool_bounded(int accept_fd)
         //	printf("master before accept fd\n");
         //	int fd = server_accept(accept_fd);
         //	printf("master finish accept fd\n");
+        int fd = server_accept(accept_fd);
         ring_buffer_push(&fd, &ring_buffer);
 
         // Unlockes the mutex and signals the pthread it can go to town.
