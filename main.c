@@ -41,6 +41,17 @@
 #define MAX_DATA_SZ 1024
 #define MAX_CONCURRENCY 4
 
+/*
+ * The threads need a mutex.
+ */
+pthread_mutex_t mutex;
+
+pthread_cond_t master_cond;
+
+ring_buffer_t ring_buffer;
+
+
+
 /* 
  * This is the function for handling a _single_ request.  Understand
  * what each of the steps in this function do, so that you can handle
@@ -154,15 +165,6 @@ server_thread_per_req(int accept_fd)
 }
 
 /*
- * The threads need a mutex.
- */
-pthread_mutex_t mutex;
-
-pthread_cond_t master_cond;
-
-ring_buffer_t ring_buffer;
-
-/*
  * Creates a pthread worker, locked based on a condition variable
  * that checks the file descriptor queue.
  */
@@ -171,7 +173,7 @@ void *server_thread_pool_bounded_worker()
   while (1) {
 	 	pthread_mutex_lock(&mutex);
 	  
-	  while (int ring_buffer_empty(&ring_buffer) == 0) {
+	  while (ring_buffer_empty(&ring_buffer) == 0) {
 	  	pthread_cond_wait(&master_cond, &mutex);
 	  }
 	  int file_descriptor;
