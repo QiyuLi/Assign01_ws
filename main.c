@@ -228,17 +228,21 @@ server_thread_pool_bounded(int accept_fd)
 		//}
 		if(ring_buffer_full(&ring_buffer) == 0)
 		{
+			printf("master: ring buffer full\n");
 			continue;
 		}
 
 		// Gets the file descriptor and pushes it into the queue
+		printf("master before accept fd\n");
 		int fd = server_accept(accept_fd);
+		printf("master finish accept fd\n");
 		ring_buffer_push(&fd, &ring_buffer);
 
 		// Unlockes the mutex and signals the pthread it can go to town.
 		pthread_mutex_unlock(&mutex);
 		printf("master release mutex\n");
 		pthread_cond_signal(&master_cond);
+		printf("master send signal\n");
 	}
 	pthread_exit(0);
 }
