@@ -200,7 +200,7 @@ server_thread_pool_bounded(int accept_fd)
 {
 	int i=0;
 	
-	buffer_init(&ring_buffer, MAX_DATA_SZ, 64);
+	ring_buffer_init(&ring_buffer, MAX_DATA_SZ, 64);
 	pthread_t threads[MAX_CONCURRENCY];
 	
 	pthread_mutex_init(&mutex, NULL);
