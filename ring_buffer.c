@@ -27,6 +27,7 @@ int ring_buffer_empty(ring_buffer_t *ring_buffer)
 
 int ring_buffer_full(ring_buffer_t *ring_buffer)
 {
+	printf("Buffer queue number: %d\n", ring_buffer->element_count);
 	if(ring_buffer->element_count == ring_buffer->capacity)
 		return 0;
 	return -1;
