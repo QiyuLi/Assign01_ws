@@ -198,13 +198,15 @@ void *server_thread_pool_bounded_worker()
 void
 server_thread_pool_bounded(int accept_fd)
 {
+	int i=0;
+	
 	buffer_init(&ring_buffer, MAX_DATA_SZ, 64);
 	pthread_t threads[MAX_CONCURRENCY];
 	
 	pthread_mutex_init(&mutex, NULL);
 	pthread_cond_init(&master_cond, NULL);
 
-	for (int i = 0; i < MAX_CONCURRENCY; ++i)
+	for (i = 0; i < MAX_CONCURRENCY; ++i)
 	{
 		pthread_create(&threads[i], NULL, server_thread_pool_bounded_worker, NULL);
 	}
