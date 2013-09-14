@@ -93,7 +93,7 @@ void *worker_per_request(void *fd)
     printf("Worker%lu start\n", pthread_self());
     client_process((int) fd);
 
-    //printf("Worker%lu Stop!\n", pthread_self());
+    printf("Worker%lu Stop!\n", pthread_self());
     pthread_exit(0);
 }
 
@@ -112,13 +112,9 @@ server_thread_per_req(int accept_fd)
     pthread_t thread[MAX_CONCURRENCY];
     int thread_used[MAX_CONCURRENCY] = {0}; /* Store thread ID, 0 if not used */
 
-    if(pthread_mutex_init(&mutex, NULL) != 0) {
-        return -1; /* return if mutex init fails */
-    }
-
     /* Start main loop */
     while(1) {
-        //printf("Loop Loop Loop Loop Loop Loop Loop Loop Loop\n");
+        printf("Loop Loop Loop Loop Loop Loop Loop Loop Loop\n");
         int threads_num = 0;
         while(threads_num < MAX_CONCURRENCY) {
             threads_num++;
@@ -134,13 +130,13 @@ server_thread_per_req(int accept_fd)
                 if(thread_used[i] == 0) {
                     thread_used[i] = 1;
                     pthread_create(&thread[i], NULL, &worker_per_request, (void *) fd);
-                    //printf("create thread\n");
+                    printf("create thread %ul\n", thread[i]);
                     break;
                 }
             }
         }
 
-        //printf("Clean Up\n");
+        printf("Clean Up\n");
         /* Join terminated thread and Clean up */
         for(i = 0; i < MAX_CONCURRENCY; i++) {
             if(thread_used[i] != 0) {
@@ -150,7 +146,7 @@ server_thread_per_req(int accept_fd)
                 //pthread_detach(&thread[i]);
                 //printf("Join Thread %lu\n", thread[i]);
                 threads_num--;
-                //printf("Current thread num: %d\n", threads_num);
+                printf("Current thread num: %d\n", threads_num);
             }
         }
     }
