@@ -13,7 +13,7 @@ typedef struct ring_buffer_t{
 
 int ring_buffer_empty(ring_buffer_t *ring_buffer);
 int ring_buffer_full(ring_buffer_t *ring_buffer);
-void ring_buffer_init(ring_buffer_t *ring_buffer, size_t capacity, size_t item_size);
+void ring_buffer_init(ring_buffer_t *ring_buffer, size_t capacity, size_t element_size);
 void ring_buffer_push(int *file_descriptor, ring_buffer_t *ring_buffer);
 void ring_buffer_pop(ring_buffer_t *ring_buffer, void *item);
 

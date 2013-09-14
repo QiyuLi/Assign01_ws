@@ -1,4 +1,4 @@
-OBJS=server.o simple_http.o content.o main.o util.o
+OBJS=server.o simple_http.o content.o main.o util.o ring_buffer.o
 CFLAGS=-g -I. -Wall -Wextra -lpthread
 #DEFINES=-DTHINK_TIME
 BIN=server
