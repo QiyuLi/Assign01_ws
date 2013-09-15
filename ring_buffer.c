@@ -36,7 +36,6 @@ int ring_buffer_is_empty(ring_buffer_t *ring_buffer)
 
 int ring_buffer_is_full(ring_buffer_t *ring_buffer)
 {
-    //printf("Buffer ring status: %d / %d\n", ring_buffer->element_count, ring_buffer->element_capacity);
     if(ring_buffer->element_count == ring_buffer->element_capacity)
         return 0;
     return -1;

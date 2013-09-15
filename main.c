@@ -2,6 +2,7 @@
  * Redistribution of this file is permitted under the GNU General
  * Public License v2.
  *
+ * Modifier: Qiyu Li, johnnyli@gwu.edu, 2013
  * Copyright 2012 by Gabriel Parmer.
  * Author: Gabriel Parmer, gparmer@gwu.edu, 2012
  */
@@ -52,7 +53,7 @@ pthread_mutex_t mutex;
 pthread_cond_t master_cond;
 pthread_cond_t worker_cond;
 
-ring_buffer_t ring_buffer;
+ring_buffer_t ring_buffer; /* define ring buffer */
 
 
 
@@ -86,7 +87,9 @@ server_single_request(int accept_fd)
 }
 
 /*
- * Define a pthread worker per request start routine
+ * Define a pthread worker per request start routine.
+ * Each thread will receive a file descripter fd and invoke
+ * client_process to deal it.
  */
 void *worker_per_request(void *fd)
 {
@@ -109,11 +112,13 @@ server_thread_per_req(int accept_fd)
 
     /* Start main loop */
     while(1) {
+        /* create threads until max concurrency */
         for(i = 0; i < MAX_CONCURRENCY; i++) {
             fd = server_accept(accept_fd);
             pthread_create(&thread[i], NULL, &worker_per_request, (void *) fd);
         }
 
+        /* join threads created until max concurrency */
         for(i = 0; i < MAX_CONCURRENCY; i++) {
             pthread_join(thread[i], NULL);
         }
@@ -123,33 +128,27 @@ server_thread_per_req(int accept_fd)
 }
 
 /*
- * Creates a pthread worker, locked based on a condition variable
- * that checks the file descriptor ring buffer.
+ * Creates a pthread worker, locked on a condition variable that checks
+ *  the file descriptor ring buffer. Will wait if ring buffer is empty.
  */
 void *server_thread_pool_bounded_worker()
 {
-    printf("Worker:%ul Start\n", pthread_self());
+    /* Worker's main loop */
     while (1) {
-        printf("Worker:%ul Waiting mutex\n", pthread_self());
         pthread_mutex_lock(&mutex);
-        printf("Worker:%ul Get mutex\n", pthread_self());
 
+        /* if ring buffer is empty, wait master push data and send signal */
         while (ring_buffer_is_empty(&ring_buffer) == 0) {
-            printf("Worker:%ul wait signal\n", pthread_self());
             pthread_cond_wait(&master_cond, &mutex);
-            printf("Worker:%ul resume after signal\n", pthread_self());
         }
+
         int fd;
-        ring_buffer_pop(&ring_buffer, &fd);
-
-
+        ring_buffer_pop(&ring_buffer, &fd); /* get file descriptor from ring buffer */
         pthread_mutex_unlock(&mutex);
-        printf("Worker:%ul Release mutex\n", pthread_self());
+        /* send signal if ring buffer is full and master is waiting for signal to wake up */
         pthread_cond_signal(&worker_cond);
 
         client_process(fd);
-        printf("Worker:%ul Finish Process\n", pthread_self());
-
     }
     pthread_exit(0);
 }
@@ -163,16 +162,14 @@ void *server_thread_pool_bounded_worker()
  * variables (for a bounded structure), or compare and swap (__cas in
  * cas.h) to do lock-free synchronization on a stack or ring buffer.
  */
-
 void
 server_thread_pool_bounded(int accept_fd)
 {
     int i = 0;
 
+    /* Init references */
     ring_buffer_init(&ring_buffer, sizeof(int), MAX_DATA_SZ);
     pthread_t threads[MAX_CONCURRENCY];
-
-
     if(pthread_mutex_init(&mutex, NULL) != 0) {
         return -1; /* return if mutex init fails */
     }
@@ -188,37 +185,21 @@ server_thread_pool_bounded(int accept_fd)
         pthread_create(&threads[i], NULL, server_thread_pool_bounded_worker, NULL);
     }
 
-    //printf("Start main request loop\n");
     /* Starts main loop */
     while (1) {
         int fd = server_accept(accept_fd);
-        printf("master waiting mutex\n");
+
         pthread_mutex_lock(&mutex);
-        printf("master get mutex\n");
-
-        // Notifies the main thread a worker has finished.
-        //while (buffer_size(&ring_buffer) != 0) {
-        //	pthread_cond_wait(&worker_condition, &mutex);
-        //}
-
+        /* Check ring buffer, if it is full, then wait workers' signal */
         while(ring_buffer_is_full(&ring_buffer) == 0) {
-            printf("master-ring buffer full\n");
             pthread_cond_wait(&worker_cond, &mutex);
         }
 
-        // Gets the file descriptor and pushes it into the queue
-        //	printf("master before accept fd\n");
-        //	int fd = server_accept(accept_fd);
-        //	printf("master finish accept fd\n");
-
         ring_buffer_push(&fd, &ring_buffer);
-        printf("master push fd\n");
 
-        // Unlockes the mutex and signals the pthread it can go to town.
+        // Unlockes the mutex and send signal to workers..
         pthread_mutex_unlock(&mutex);
-        printf("master release mutex\n");
         pthread_cond_signal(&master_cond);
-        printf("master send signal\n");
     }
 
     pthread_exit(0);
