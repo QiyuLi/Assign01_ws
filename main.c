@@ -90,10 +90,7 @@ server_single_request(int accept_fd)
  */
 void *worker_per_request(void *fd)
 {
-    printf("Worker%lu start\n", pthread_self());
     client_process((int) fd);
-
-    printf("Worker%lu Stop!\n", pthread_self());
     pthread_exit(0);
 }
 
@@ -106,42 +103,19 @@ void
 server_thread_per_req(int accept_fd)
 {
     int fd;
-    int i, j = 0;
-    void *ret;
+    int i = 0;
 
     pthread_t thread[MAX_CONCURRENCY];
 
     /* Start main loop */
     while(1) {
-        printf("Loop Loop Loop Loop Loop Loop Loop Loop Loop\n");
-
-        //printf("threads_num: %d\n", threads_num);
-        /*
-         * The server thread will always want to doing the accept.
-         * The main thread will hand off the new fd to the new
-         * threads.
-         */
-        //fd = server_accept(accept_fd);
-        //printf("accept\n");
         for(i = 0; i < MAX_CONCURRENCY; i++) {
             fd = server_accept(accept_fd);
             pthread_create(&thread[i], NULL, &worker_per_request, (void *) fd);
-            printf("create thread %ul\n", thread[i]);
-
         }
 
-
-        printf("Clean Up\n");
-        /* Join terminated thread and Clean up */
         for(i = 0; i < MAX_CONCURRENCY; i++) {
-
-            printf("Begin to Join THread %lu\n", thread[i]);
             pthread_join(thread[i], NULL);
-            //pthread_detach(&thread[i]);
-            //printf("Join Thread %lu\n", thread[i]);
-
-
-
         }
     }
 
